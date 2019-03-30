@@ -16,6 +16,8 @@ import {
   withStyles,
 } from '@material-ui/core';
 
+import LoadingOverlay from 'react-loading-overlay';
+
 const styles = theme => ({
 });
 
@@ -36,8 +38,7 @@ class AddEvent extends React.Component {
     descError: null,
     organizer: "",
     organizerError: null,
-    organizerContact: "",
-    organizerContactError: null
+    isLoading: false,
   };
 
   handleClickOpen = () => {
@@ -48,13 +49,83 @@ class AddEvent extends React.Component {
     this.setState({ open: false });
   };
 
+  tooLongMsg = (maxLength) => {
+    return "Name is too long. Must be no more than " + maxLength + " characters";
+  };
+
+  requiredMsg = () => {
+    return "Field is required";
+  }
+
   handleSubmit = () => {
+    let okay = true;
+    
+    if (this.state.name === "") {
+      this.setState({nameError: this.requiredMsg()});
+      okay = false;
+    } else if (this.state.name.length > 60) {
+      this.setState({nameError: this.tooLongMsg(60)});
+      okay = false;
+    } else {
+      this.setState({nameError: null});
+    }
+
+    console.log(this.state.startTime);
+    if (this.state.startTime === null) {
+      this.setState({startTimeError: this.requiredMsg()});
+      okay = false;
+    } else {
+      this.setState({startTimeError: null});
+    }
+    
+    if (this.state.endTime === null) {
+      this.setState({endTimeError: this.requiredMsg()});
+      okay = false;
+    } else {
+      this.setState({endTimeError: null});
+    }
+    
+    if (this.state.loc === "") {
+      this.setState({locError: this.requiredMsg()});
+      okay = false;
+    } else if (this.state.loc.length > 60) {
+      this.setState({locError: this.tooLongMsg(60)});
+      okay = false;
+    } else {
+      this.setState({locError: null});
+    }
+    
+    if (this.state.desc.length > 560) {
+      this.setState({descError: this.tooLongMsg(560)});
+      okay = false;
+    } else if (this.state.desc.split(/\r\n|\r|\n/).length > 5) {
+      this.setState({descError: "Field has too many lines. Must be no more than 5 lines"});
+      okay = false;
+    } else if (this.state.desc === "") {
+      this.setState({descError: this.requiredMsg()});
+      okay = false;
+    } else {
+      this.setState({descError: null});
+    }
+    
+    if (this.state.organizer === "") {
+      this.setState({organizerError: this.requiredMsg()});
+      okay = false;
+    } else if (this.state.organizer.length > 60) {
+      this.setState({organizerError: this.tooLongMsg(60)});
+      okay = false;
+    } else {
+      this.setState({organizerError: null});
+    }
+
+    if (okay) {
+      this.setState({isLoading: true});
+    }
   };
 
   render() {
-    const classes = this.props.classes;
     return (
-      <span >
+      <span>
         <Button variant="outlined" color="default" onClick={this.handleClickOpen}>
           Add Event
         </Button>
@@ -63,6 +134,13 @@ class AddEvent extends React.Component {
           onClose={this.handleClose}
           aria-labelledby="form-dialog-title"
         >
+          <LoadingOverlay
+            active={this.state.isLoading}
+            spinner
+            text='Contacting the other side...'
+          >
+
+ 
           <DialogTitle id="form-dialog-title">Add Event</DialogTitle>
           <DialogContent>
             <Grid container spacing={8}>
@@ -76,7 +154,7 @@ class AddEvent extends React.Component {
               {/* Event name */}
               <Grid item xs={12}>
                 <TextField
-                  error={this.state.nameError} 
+                  error={this.state.nameError !== null} 
                   autoFocus
                   onChange={(event) => this.setState({name: event.target.value})}
                   id="name"
@@ -89,7 +167,7 @@ class AddEvent extends React.Component {
               {/* Organizer name */}
               <Grid item xs={12}>
                 <TextField
-                  error={this.state.organizerError} 
+                  error={this.state.organizerError !== null} 
                   autoFocus
                   onChange={(event) => this.setState({organizer: event.target.value})}
                   id="name"
@@ -102,7 +180,7 @@ class AddEvent extends React.Component {
               {/* Location */}
               <Grid item xs={12}>
                 <TextField
-                  error={this.state.locError} 
+                  error={this.state.locError !== null} 
                   autoFocus
                   onChange={(event) => this.setState({loc: event.target.value})}
                   id="name"
@@ -129,54 +207,57 @@ class AddEvent extends React.Component {
                   <FormHelperText error>{this.state.dayError}</FormHelperText>
                 </FormControl>
               </Grid>
-              
+
               {/* Start and end time pickers */}
               <Grid item xs={4}>
-                  <TextField
-                    id="startTime"
-                    label="Start Time"
-                    type="time"
-                    onChange={(event) => this.setState({startTime: event.target.value})}
-                    defaultValue=""
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    inputProps={{
-                      step: 300, // 5 min
-                    }}
-                  />
+                <TextField
+                  error={this.state.startTimeError !== null}
+                  id="startTime"
+                  label="Start Time"
+                  type="time"
+                  onChange={(event) => this.setState({startTime: event.target.value})}
+                  defaultValue=""
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                />
+                <FormHelperText error>{this.state.startTimeError}</FormHelperText>
               </Grid>
               <Grid item xs={4}>
-                  <TextField
-                    id="startTime"
-                    label="End Time"
-                    type="time"
-                    onChange={(event) => this.setState({endTime: event.target.value})}
-                    defaultValue=""
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    inputProps={{
-                      step: 300, // 5 min
-                    }}
-                  />
+                <TextField
+                  id="startTime"
+                  label="End Time"
+                  type="time"
+                  onChange={(event) => this.setState({endTime: event.target.value})}
+                  defaultValue=""
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                />
+                <FormHelperText error>{this.state.endTimeError}</FormHelperText>
               </Grid>
-              
+
               {/* Description */}
               <Grid item xs={12}>
-                  <TextField
-                    error={this.state.descError} 
-                    autoFocus
-                    onChange={(event) => this.setState({desc: event.target.value})}
-                    rows="5"
-                    variant="outlined"
-                    id="name"
-                    label="Description"
-                    multiline
-                    fullWidth
-                  />
-                  <FormHelperText>140 character Maximum</FormHelperText>
-                  <FormHelperText error>{this.state.descError}</FormHelperText>
+                <TextField
+                  error={this.state.descError !== null} 
+                  autoFocus
+                  onChange={(event) => this.setState({desc: event.target.value})}
+                  rows="5"
+                  variant="outlined"
+                  id="name"
+                  label="Description"
+                  multiline
+                  fullWidth
+                />
+                <FormHelperText>560 character Maximum</FormHelperText>
+                <FormHelperText error>{this.state.descError}</FormHelperText>
               </Grid>
             </Grid>
 
@@ -185,16 +266,17 @@ class AddEvent extends React.Component {
               <Button onClick={this.handleClose} color="primary" variant="outlined">
                 Cancel
               </Button>
-              <Button onClick={this.handlePreview} color="primary" variant="outlined">
+              <Button onClick={this.handleSubmit} color="primary" variant="outlined">
                 Save & Add More
               </Button>
-              <Button onClick={this.handlePreview} color="primary" variant="outlined">
+              <Button onClick={this.handleSubmit} color="primary" variant="outlined">
                 Save
               </Button>
             </DialogActions>
           </DialogContent>
-        </Dialog>
-      </span>
+        </LoadingOverlay>
+      </Dialog>
+    </span>
     );
   }
 }
